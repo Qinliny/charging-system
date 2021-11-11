@@ -10,8 +10,7 @@
 // +----------------------------------------------------------------------
 use think\facade\Route;
 
-Route::get('think', function () {
-    return 'hello,ThinkPHP6!';
-});
+Route::get("/", "Index/index");
 
-Route::get('hello/:name', 'index/hello');
+// 首页
+Route::get("/index", "Index/home");
