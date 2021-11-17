@@ -1,7 +1,7 @@
 <!-- 侧边菜单 -->
 <div class="layui-side layui-side-menu">
     <div class="layui-side-scroll">
-        <div class="layui-logo" lay-href="/admin/index">
+        <div class="layui-logo" lay-href="/index">
             <span>天湖幼儿园收费系统</span>
         </div>
         
@@ -11,6 +11,35 @@
                     <i class="layui-icon layui-icon-home"></i>
                     <cite>主页</cite>
                 </a>
+            </li>
+            <li data-name="student" class="layui-nav-item">
+                <a href="javascript:;" lay-href="/student" lay-tips="学生管理" lay-direction="2">
+                    <i class="layui-icon layui-icon-home"></i>
+                    <cite>学生管理</cite>
+                </a>
+            </li>
+            <li data-name="school" class="layui-nav-item">
+                <a href="javascript:;" lay-tips="教务管理" lay-direction="2">
+                    <i class="layui-icon layui-icon-home"></i>
+                    <cite>教务管理</cite>
+                </a>
+                <dl class="layui-nav-child">
+                    <dd data-name="console">
+                        <a lay-href="/nursery">幼儿园名称设置</a>
+                    </dd>
+                    <dd data-name="console">
+                        <a lay-href="/grade">年级设置</a>
+                    </dd>
+                    <dd data-name="console">
+                        <a lay-href="/class">班级设置</a>
+                    </dd>
+                    <dd data-name="console">
+                        <a lay-href="/interestClasses">兴趣班设置</a>
+                    </dd>
+                    <dd data-name="console">
+                        <a lay-href="/wuTuoClass">午托班设置</a>
+                    </dd>
+                </dl>
             </li>
         </ul>
     </div>

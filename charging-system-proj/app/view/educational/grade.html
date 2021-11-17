@@ -1,0 +1,198 @@
+{extend name="common/childPublic"}
+
+{block name="content"}
+<span class="layui-breadcrumb">
+    <a><cite>首页</cite></a>
+    <a><cite>教务管理</cite></a>
+    <a href="/grade">
+        年级设置
+    </a>
+</span>
+
+<div class="content">
+    <div class="layui-card">
+        <div class="layui-collapse">
+            <div class="layui-colla-item">
+                <h2 class="layui-colla-title">
+                    高级搜索
+                </h2>
+                <div class="layui-colla-content layui-show">
+                    <div class="layui-row layui-col-space10 demo-list layui-form" lay-filter="queryForm">
+                        <div class="layui-col-sm6 layui-col-md6 layui-col-lg6">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">年级名称</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="grade_name" placeholder="年级名称" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm12 layui-col-md12 layui-col-lg12">
+                            <div class="layui-form-item">
+                                <div class="layui-input-block">
+                                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="query">查询结果</button>
+                                    <button type="reset" class="layui-btn layui-btn-primary" id="reset">重置</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="layui-card">
+        <div class="layui-card-header">
+            <button class="layui-btn layui-btn-sm" id="add">添加年级</button>
+        </div>
+        <div class="layui-card-body">
+            <table id="list" lay-filter="list"></table>
+        </div>
+    </div>
+</div>
+
+<div class="openBox layui-hide">
+    <div class="layui-form" style="padding: 15px">
+        <div class="layui-form-item">
+            <label class="layui-form-label">年级名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="grade_name" lay-verify="grade_name" placeholder="年级名称" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="saveData">立即提交</button>
+            </div>
+        </div>
+    </div>
+</div>
+{/block}
+
+{block name="js"}
+<script type="text/html" id="barOperation">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script>
+    layui.use(['table', 'form'], function() {
+        let $ = layui.$, table = layui.table, form = layui.form;
+
+        function isNull(value) {
+            let str = value.replace(/(^\s*)|(\s*$)/g, '');
+            return (str == '' || str == undefined || str == null) ? false : true
+        }
+
+        $('#add').on('click', function() {
+            layer.open({
+                type: 1
+                ,area: ['460px', '200px']
+                ,anim: 5
+                ,shadeClose: false
+                ,title: "添加年级"
+                ,content: $('.openBox').html()
+                ,success: function() {
+                    form.verify({
+                        grade_name: function(value) {
+                            if (!isNull(value)) {
+                                return "请输入年级名称"
+                            }
+                            if (value.length > 10) {
+                                return "年级名称长度不能超过10"
+                            }
+                        }
+                    })
+
+                    form.on('submit(saveData)', function(obj) {
+                        let loading = layer.load(1, {shade: [0.3,'#000']});
+                        $.post('/grade/save', obj.field, function(resp) {
+                            layer.close(loading)
+                            if (resp.code != 0) {
+                                layer.msg(resp.message, {icon: 5});
+                                return false
+                            }
+                            layer.closeAll()
+                            layer.msg(resp.message, {icon: 1});
+                            listTable.reload()
+                        }).error(function() {
+                            layer.close(loading)
+                            layer.msg("服务器出现异常", {icon: 5});
+                        })
+                    })
+                }
+            });
+        })
+
+        let listTable = table.render({
+            elem: '#list'
+            ,url: '/grade/list'
+            ,method: "post"
+            ,page: true
+            ,height: "full"
+            ,cols: [[
+                {field: '', title: '序号', type: 'numbers'}
+                ,{field: 'grade_name', title: '年级名称', minWidth:130}
+                ,{field: 'create_time', title: '添加时间', minWidth:130}
+                ,{field: '', title: '操作', toolbar: "#barOperation", width: 300,  fixed: 'right'}
+            ]]
+        });
+
+        let thisTableWhere;
+        form.on('submit(query)', function(data){
+            listTable.reload({
+                where: data.field,
+                page: {curr: 1},
+                done: function(){
+                    thisTableWhere = this
+                }
+            })
+            return false
+        })
+
+        $('#reset').on('click', function(){
+            if (typeof thisTableWhere != 'undefined') {
+                thisTableWhere.where = {}
+            }
+            form.val("queryForm", {
+                "grade_name": "",
+            })
+            listTable.reload('list')
+        })
+
+        table.on('tool(list)', function (obj) {
+            switch (obj.event) {
+                case "edit":
+                    layer.open({
+                        type: 1
+                        ,area: ['460px', '200px']
+                        ,anim: 5
+                        ,shadeClose: false
+                        ,title: "修改年级名称",
+                        content: $('.openBox').html(),
+                        success: function() {
+                            $('.layui-layer-content').find('input[name="grade_name"]').val(obj.data.grade_name)
+                            form.on('submit(saveData)', function (data) {
+                                let loading = layer.load(1, {shade: [0.3,'#000']});
+                                data.field.grade_id = obj.data.id
+                                $.post('/grade/editData', data.field, function(resp) {
+                                    layer.close(loading)
+                                    if (resp.code != 0) {
+                                        layer.msg(resp.message, {icon: 5});
+                                        return false
+                                    }
+                                    layer.closeAll()
+                                    layer.msg(resp.message, {icon: 1});
+                                    listTable.reload()
+                                }).error(function() {
+                                    layer.close(loading)
+                                    layer.msg("服务器出现异常", {icon: 5});
+                                })
+                            })
+                        }
+                    });
+                    break;
+                case "del":
+                    break;
+            }
+        })
+    })
+</script>
+{/block}
