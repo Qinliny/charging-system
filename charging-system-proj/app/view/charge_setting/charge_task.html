@@ -1,0 +1,343 @@
+{extend name="common/childPublic"}
+
+{block name="content"}
+<span class="layui-breadcrumb">
+    <a><cite>首页</cite></a>
+    <a><cite>收费设置</cite></a>
+    <a href="/chargeTask">
+        收费任务设置
+    </a>
+</span>
+
+<div class="content">
+    <div class="layui-card">
+        <div class="layui-collapse">
+            <div class="layui-colla-item">
+                <h2 class="layui-colla-title">
+                    高级搜索
+                </h2>
+                <div class="layui-colla-content layui-show">
+                    <div class="layui-row layui-col-space10 demo-list layui-form" lay-filter="queryForm">
+                        <div class="layui-col-sm3 layui-col-md3 layui-col-lg3">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">类型</label>
+                                <div class="layui-input-block">
+                                    <select name="charge_type">
+                                        <option value=""></option>
+                                        {foreach $chargeType as $kye => $value}
+                                        <option value="{$kye}">{$value}</option>
+                                        {/foreach}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm3 layui-col-md3 layui-col-lg3">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">任务名称</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="task_name" placeholder="任务名称" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm3 layui-col-md3 layui-col-lg3">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">开始时间</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="begin_time" placeholder="开始时间" autocomplete="off" class="layui-input"
+                                    id="beginTime" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm3 layui-col-md3 layui-col-lg3">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">结束时间</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="end_time" placeholder="结束时间" autocomplete="off" class="layui-input"
+                                    id="endTime" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm12 layui-col-md12 layui-col-lg12">
+                            <div class="layui-form-item">
+                                <div class="layui-input-block">
+                                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="query">查询结果</button>
+                                    <button type="reset" class="layui-btn layui-btn-primary" id="reset">重置</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-card">
+        <div class="layui-card-header">
+            <button class="layui-btn layui-btn-sm" id="add">添加收费任务</button>
+        </div>
+        <div class="layui-card-body">
+            <table id="list" lay-filter="list"></table>
+        </div>
+    </div>
+</div>
+
+<div class="openBox layui-hide">
+    <div class="layui-form" style="padding: 15px">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">类型</label>
+            <div class="layui-input-block">
+                <select name="charge_type" lay-verify="task_name">
+                    <option value="">请选择类型</option>
+                    {foreach $chargeType as $kye => $value}
+                    <option value="{$kye}">{$value}</option>
+                    {/foreach}
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">任务名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="task_name" lay-verify="task_name" placeholder="任务名称"
+                       autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">开始时间</label>
+            <div class="layui-input-block">
+                <input type="text" name="begin_time" lay-verify="begin_time" placeholder="请选择开始时间"
+                       autocomplete="off" class="layui-input begin_time" readonly>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">结束时间</label>
+            <div class="layui-input-block">
+                <input type="text" name="end_time" lay-verify="end_time" placeholder="请选择结束时间"
+                       autocomplete="off" class="layui-input end_time" readonly>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="saveData">立即提交</button>
+            </div>
+        </div>
+    </div>
+</div>
+{/block}
+
+{block name="js"}
+<script type="text/html" id="barOperation">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script>
+    layui.use(['table', 'form', 'laydate'], function() {
+        let $ = layui.$, table = layui.table, form = layui.form, laydate = layui.laydate;
+
+        function isNull(value) {
+            let str = value.replace(/(^\s*)|(\s*$)/g, '');
+            return (str == '' || str == undefined || str == null) ? false : true
+        }
+
+        let searchBeginTime = laydate.render({
+            elem: '#beginTime',
+            done: function(value, date) {
+                searchEndTime.config.min = {
+                    year: date.year,
+                    month: date.month - 1,
+                    date: date.date,
+                    hours: date.hours,
+                    minutes: date.minutes,
+                    seconds: date.seconds
+                };
+            }
+        });
+
+        let searchEndTime = laydate.render({
+            elem: '#endTime',
+            done: function(value, date) {
+                searchBeginTime.config.max = {
+                    year: date.year,
+                    month: date.month - 1,
+                    date: date.date,
+                    hours: date.hours,
+                    minutes: date.minutes,
+                    seconds: date.seconds
+                };
+            }
+        });
+
+
+        $('#add').on('click', function() {
+            layer.open({
+                type: 1
+                ,area: ['460px', '400px']
+                ,anim: 5
+                ,shadeClose: false
+                ,title: "添加收费任务"
+                ,content: $('.openBox').html()
+                ,success: function() {
+                    form.render();
+                    form.verify({
+                        charge_type: function(value) {
+                            if (!isNull(value)) {
+                                return "请选择类型"
+                            }
+                            if (value.length > 10) {
+                                return "年级名称长度不能超过10"
+                            }
+                        },
+                        task_name: function(value) {
+                            if (!isNull(value)) {
+                                return "请输入任务名称"
+                            }
+                            if (value.length > 10) {
+                                return "任务名称长度不能超过10"
+                            }
+                        },
+                        begin_time: function(value) {
+                            if (!isNull(value)) {
+                                return "请选择开始时间"
+                            }
+                        },
+                        end_time: function(value) {
+                            if (!isNull(value)) {
+                                return "请选择结束时间"
+                            }
+                        }
+                    })
+
+                    let beginTime = laydate.render({
+                        elem: '.begin_time',
+                        done: function(value, date) {
+                            endTime.config.min = {
+                                year: date.year,
+                                month: date.month - 1,
+                                date: date.date,
+                                hours: date.hours,
+                                minutes: date.minutes,
+                                seconds: date.seconds
+                            };
+                        }
+                    });
+
+                    let endTime = laydate.render({
+                        elem: '.end_time',
+                        done: function(value, date) {
+                            beginTime.config.max = {
+                                year: date.year,
+                                month: date.month - 1,
+                                date: date.date,
+                                hours: date.hours,
+                                minutes: date.minutes,
+                                seconds: date.seconds
+                            };
+                        }
+                    });
+
+                    form.on('submit(saveData)', function(obj) {
+                        let loading = layer.load(1, {shade: [0.3,'#000']});
+                        $.post('/chargeTask/save', obj.field, function(resp) {
+                            layer.close(loading)
+                            if (resp.code != 0) {
+                                layer.msg(resp.message, {icon: 5});
+                                return false
+                            }
+                            layer.closeAll()
+                            layer.msg(resp.message, {icon: 1});
+                            listTable.reload()
+                        }).error(function() {
+                            layer.close(loading)
+                            layer.msg("服务器出现异常", {icon: 5});
+                        })
+                    })
+                }
+            });
+        })
+
+        let listTable = table.render({
+            elem: '#list'
+            ,url: '/chargeTask/list'
+            ,method: "post"
+            ,page: true
+            ,height: "full"
+            ,cols: [[
+                {field: '', title: '序号', type: 'numbers'}
+                ,{field: 'charge_type', title: '类型', minWidth:130}
+                ,{field: 'task_name', title: '任务名称', minWidth:130}
+                ,{field: 'begin_time', title: '任务开始时间', minWidth:130}
+                ,{field: 'end_time', title: '任务结束时间', minWidth:130}
+                ,{field: 'create_time', title: '添加时间', minWidth:130}
+                ,{field: '', title: '操作', toolbar: "#barOperation", width: 300,  fixed: 'right'}
+            ]]
+        });
+
+        let thisTableWhere;
+        form.on('submit(query)', function(data){
+            listTable.reload({
+                where: data.field,
+                page: {curr: 1},
+                done: function(){
+                    thisTableWhere = this
+                }
+            })
+            return false
+        })
+
+        $('#reset').on('click', function(){
+            if (typeof thisTableWhere != 'undefined') {
+                thisTableWhere.where = {}
+            }
+            form.val("queryForm", {
+                "charge_type": "",
+                "task_name": "",
+                "begin_time": "",
+                "end_time": "",
+            })
+            listTable.reload('list')
+        })
+
+        table.on('tool(list)', function (obj) {
+            switch (obj.event) {
+                case "edit":
+                    layer.open({
+                        type: 1
+                        ,area: ['460px', '400px']
+                        ,anim: 5
+                        ,shadeClose: false
+                        ,title: "修改任务信息",
+                        content: $('.openBox').html(),
+                        success: function() {
+                            form.render();
+                            $('.layui-layer-content').find('input[name="grade_name"]').val(obj.data.grade_name)
+                            form.on('submit(saveData)', function (data) {
+                                let loading = layer.load(1, {shade: [0.3,'#000']});
+                                data.field.grade_id = obj.data.id
+                                $.post('/ChargeSetting/editData', data.field, function(resp) {
+                                    layer.close(loading)
+                                    if (resp.code != 0) {
+                                        layer.msg(resp.message, {icon: 5});
+                                        return false
+                                    }
+                                    layer.closeAll()
+                                    layer.msg(resp.message, {icon: 1});
+                                    listTable.reload()
+                                }).error(function() {
+                                    layer.close(loading)
+                                    layer.msg("服务器出现异常", {icon: 5});
+                                })
+                            })
+                        }
+                    });
+                    break;
+                case "del":
+                    break;
+            }
+        })
+    })
+</script>
+{/block}

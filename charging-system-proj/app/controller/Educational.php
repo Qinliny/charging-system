@@ -306,7 +306,7 @@ class Educational extends BaseController
     }
 
     // 修改班级
-    public function editClass(ClassDb $db) {
+    public function editClass(ClassDb $db, GradeDb $gradeDb) {
         $param = request()->post();
         validate(EducationalValidate::class)->scene('editClass')->check($param);
 
@@ -319,8 +319,6 @@ class Educational extends BaseController
             returnMsg(__LINE__, "该班级名称已存在，");
         }
 
-        // 判断年级ID是否正确
-        $gradeDb = new GradeDb();
         // 判断年级ID是否正确
         $gradeRes = $gradeDb->find([
             ['id', '=', $param['gradeId']]

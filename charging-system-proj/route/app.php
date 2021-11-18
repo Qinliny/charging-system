@@ -59,3 +59,10 @@ Route::group("/class", function() {
     Route::post("/save", "Educational/addClass");
     Route::post("/editData", "Educational/editClass");
 });
+
+// 收费任务
+Route::group("/chargeTask", function() {
+    Route::get("/", "ChargeSetting/chargeTask");
+    Route::post("/list", "ChargeSetting/chargeTask");
+    Route::post("/save", "ChargeSetting/addChargeTask");
+});
